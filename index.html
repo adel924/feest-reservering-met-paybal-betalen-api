@@ -1,22 +1,83 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<title>Feest Reservering</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feest Reservering</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff8a00, #e52e71);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        label { display:block; margin-top:10px; font-weight:600; }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top:6px;
+            border-radius: 8px;
+            border:1px solid #ccc;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg,#ff8a00,#e52e71);
+            color:#fff;
+            font-weight:700;
+            cursor:pointer;
+            border:none;
+            margin-top:14px;
+        }
+        #resultaat {
+            display:none;
+            margin-top:12px;
+            padding:12px;
+            background:#ffe6e6;
+            border-radius:8px;
+            color:#900;
+        }
+    </style>
 </head>
 <body>
-<h2>🎉 Feest Reservering</h2>
-<form id="form">
+<div class="container">
+    <h2>🎉 Feest Reservering</h2>
     <label>Stad:</label>
-    <select id="stad"><option>Amsterdam</option><option>Rotterdam</option><option>Utrecht</option><option>Maastricht</option></select>
-    <label>Datum:</label><input type="date" id="datum">
-    <label>Feest naam:</label><input type="text" id="feest_naam">
-    <label>Aantal personen:</label><input type="number" id="aantal">
-    <label>Namen:</label><input type="text" id="namen">
-    <label>Email:</label><input type="email" id="customer_email">
+    <select id="stad">
+        <option>Amsterdam</option>
+        <option>Rotterdam</option>
+        <option>Utrecht</option>
+        <option>Maastricht</option>
+    </select>
+
+    <label>Datum:</label>
+    <input type="date" id="datum">
+
+    <label>Feest naam:</label>
+    <input type="text" id="feest_naam" placeholder="Bijv. Verjaardag">
+
+    <label>Aantal personen:</label>
+    <input type="number" id="aantal" placeholder="Bijv. 5">
+
+    <label>Namen:</label>
+    <input type="text" id="namen" placeholder="Bijv. Ali, Omar, Sara">
+
+    <label>Email klant (optioneel):</label>
+    <input type="email" id="customer_email" placeholder="example@mail.com">
+
     <button type="button" onclick="verstuur()">Naar Betaling</button>
-</form>
-<div id="resultaat"></div>
+    <div id="resultaat"></div>
+</div>
 
 <script>
 function verstuur(){
@@ -29,7 +90,7 @@ function verstuur(){
         customer_email: document.getElementById('customer_email').value
     };
 
-    fetch('/reserveer',{
+    fetch('https://adelsl924.pythonanywhere.com/reserveer',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify(data)
@@ -38,13 +99,19 @@ function verstuur(){
         const text = await r.text();
         try {
             const res = JSON.parse(text);
-            if(res.url) window.location.href = res.url;
-            else document.getElementById('resultaat').innerText = res.melding || 'Er is een fout.';
+            if(res.url){
+                window.location.href = res.url; // تحويل إلى PayPal
+            } else {
+                document.getElementById('resultaat').style.display='block';
+                document.getElementById('resultaat').innerText = res.melding || 'Er is een fout.';
+            }
         } catch(e){
+            document.getElementById('resultaat').style.display='block';
             document.getElementById('resultaat').innerText = 'Server gaf geen geldig JSON terug: ' + text;
         }
     })
     .catch(e=>{
+        document.getElementById('resultaat').style.display='block';
         document.getElementById('resultaat').innerText = 'Fout bij verbinding met server: ' + e;
     });
 }
