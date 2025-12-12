@@ -1,112 +1,50 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feest Reservering</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #ff8a00, #e52e71);
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-            margin:0
-        }
-        .container{
-            background:white;
-            padding:30px;
-            border-radius:15px;
-            box-shadow:0 10px 40px rgba(0,0,0,0.2);
-            width:100%;
-            max-width:480px
-        }
-        label{display:block;margin-top:10px;font-weight:600}
-        input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ccc}
-        button{
-            width:100%;
-            padding:12px;
-            margin-top:14px;
-            border-radius:10px;
-            border:none;
-            background:linear-gradient(135deg,#ff8a00,#e52e71);
-            color:#fff;
-            font-weight:700;
-            cursor:pointer;
-        }
-        button:hover { opacity:0.9; }
-        #resultaat{
-            display:none;
-            margin-top:12px;
-            padding:12px;
-            background:#ffe6e6;
-            border-radius:8px;
-            color:#a00;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Feest Reservering</title>
 </head>
 <body>
-<div class="container">
-    <h2>🎉 Feest Reservering</h2>
-
+<h2>🎉 Feest Reservering</h2>
+<form id="form">
     <label>Stad:</label>
-    <select id="stad">
-        <option>Amsterdam</option>
-        <option>Rotterdam</option>
-        <option>Utrecht</option>
-        <option>Maastricht</option>
-    </select>
-
-    <label>Datum:</label>
-    <input type="date" id="datum">
-
-    <label>Feest naam:</label>
-    <input type="text" id="feest_naam" placeholder="Bijv. Verjaardag">
-
-    <label>Aantal personen:</label>
-    <input type="number" id="aantal" placeholder="Bijv. 5">
-
-    <label>Namen:</label>
-    <input type="text" id="namen" placeholder="Bijv. Ali, Omar, Sara">
-
-    <label>Email klant (optioneel, لإرسال تأكيد):</label>
-    <input type="email" id="customer_email" placeholder="klaar@voorbeeld.nl">
-
-    <button onclick="verstuur()">Naar Betaling</button>
-
-    <div id="resultaat"></div>
-</div>
+    <select id="stad"><option>Amsterdam</option><option>Rotterdam</option><option>Utrecht</option><option>Maastricht</option></select>
+    <label>Datum:</label><input type="date" id="datum">
+    <label>Feest naam:</label><input type="text" id="feest_naam">
+    <label>Aantal personen:</label><input type="number" id="aantal">
+    <label>Namen:</label><input type="text" id="namen">
+    <label>Email:</label><input type="email" id="customer_email">
+    <button type="button" onclick="verstuur()">Naar Betaling</button>
+</form>
+<div id="resultaat"></div>
 
 <script>
-function verstuur() {
+function verstuur(){
     const data = {
         stad: document.getElementById('stad').value,
         datum: document.getElementById('datum').value,
         feest_naam: document.getElementById('feest_naam').value,
-        aantal_personen: parseInt(document.getElementById('aantal').value) || 0,
+        aantal_personen: parseInt(document.getElementById('aantal').value)||0,
         namen: document.getElementById('namen').value,
-        customer_email: document.getElementById('customer_email').value || "",
-        betalen: "ja"  // نفترض دائمًا أن المستخدم يريد الدفع
+        customer_email: document.getElementById('customer_email').value
     };
 
-    fetch('/reserveer', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+    fetch('/reserveer',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify(data)
     })
-    .then(r => r.json())
-    .then(res => {
-        if(res.status === "redirect" && res.url){
-            window.location.href = res.url;
-        } else {
-            document.getElementById('resultaat').style.display = 'block';
-            document.getElementById('resultaat').innerText = res.melding || 'Er is een fout.';
+    .then(async r=>{
+        const text = await r.text();
+        try {
+            const res = JSON.parse(text);
+            if(res.url) window.location.href = res.url;
+            else document.getElementById('resultaat').innerText = res.melding || 'Er is een fout.';
+        } catch(e){
+            document.getElementById('resultaat').innerText = 'Server gaf geen geldig JSON terug: ' + text;
         }
     })
-    .catch(e => {
-        document.getElementById('resultaat').style.display = 'block';
+    .catch(e=>{
         document.getElementById('resultaat').innerText = 'Fout bij verbinding met server: ' + e;
     });
 }
